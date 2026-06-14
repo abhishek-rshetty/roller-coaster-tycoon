@@ -1,87 +1,140 @@
+import { useEffect, useMemo, useState } from "react";
 import type { MonthlyReport as MonthlyReportType } from "../game/types";
 import { formatMoney, formatPercent, formatNumber } from "../utils/format";
 
 type MonthlyReportProps = {
-  report: MonthlyReportType | null;
+  latestReport: MonthlyReportType | null;
+  monthlyHistory: MonthlyReportType[];
 };
 
-export function MonthlyReport({ report }: MonthlyReportProps) {
+export function MonthlyReport({ latestReport, monthlyHistory }: MonthlyReportProps) {
+  const latestMonth = latestReport?.month ?? null;
+  const [selectedMonth, setSelectedMonth] = useState<number | "latest">("latest");
+
+  useEffect(() => {
+    if (selectedMonth === "latest") {
+      return;
+    }
+
+    const exists = monthlyHistory.some((report) => report.month === selectedMonth);
+    if (!exists) {
+      setSelectedMonth("latest");
+    }
+  }, [monthlyHistory, selectedMonth]);
+
+  const visibleReport = useMemo(() => {
+    if (selectedMonth === "latest") {
+      return latestReport;
+    }
+
+    return monthlyHistory.find((report) => report.month === selectedMonth) ?? latestReport;
+  }, [latestReport, monthlyHistory, selectedMonth]);
+
   return (
-    <section className="panel">
+    <section className="panel panel--report">
       <div className="panel-header">
         <div>
           <p className="eyebrow">Feedback</p>
           <h2>Monthly Report</h2>
         </div>
+        {monthlyHistory.length > 0 ? (
+          <label className="month-picker">
+            <span>View Month</span>
+            <select
+              value={selectedMonth === "latest" ? "latest" : String(selectedMonth)}
+              onChange={(event) =>
+                setSelectedMonth(event.target.value === "latest" ? "latest" : Number(event.target.value))
+              }
+            >
+              <option value="latest">{latestMonth ? `Latest (Month ${latestMonth})` : "Latest"}</option>
+              {[...monthlyHistory]
+                .sort((a, b) => b.month - a.month)
+                .map((report) => (
+                  <option key={report.month} value={report.month}>
+                    Month {report.month}
+                  </option>
+                ))}
+            </select>
+          </label>
+        ) : null}
       </div>
 
-      {!report ? (
+      {!visibleReport ? (
         <p className="empty-state">
           Run your first month to see visitors, profit, satisfaction, and why the park performed that way.
         </p>
       ) : (
         <div className="report-layout">
-          <dl className="report-grid">
-            <div>
-              <dt>Month</dt>
-              <dd>{report.month}</dd>
+          <div className="report-section-grid">
+            <div className="report-block">
+              <h3>Operations</h3>
+              <dl className="report-list">
+                <div><dt>Month</dt><dd>{visibleReport.month}</dd></div>
+                <div><dt>Visitors</dt><dd>{formatNumber(visibleReport.visitors)}</dd></div>
+                <div><dt>Satisfaction</dt><dd>{formatPercent(visibleReport.satisfaction)}</dd></div>
+                <div><dt>Reputation</dt><dd>{visibleReport.reputation.toFixed(2)}</dd></div>
+              </dl>
             </div>
-            <div>
-              <dt>Visitors</dt>
-              <dd>{formatNumber(report.visitors)}</dd>
-            </div>
-            <div>
-              <dt>Ticket Revenue</dt>
-              <dd>{formatMoney(report.ticketRevenue)}</dd>
-            </div>
-            <div>
-              <dt>In-Park Revenue</dt>
-              <dd>{formatMoney(report.inParkRevenue)}</dd>
-            </div>
-            <div>
-              <dt>Total Revenue</dt>
-              <dd>{formatMoney(report.totalRevenue)}</dd>
-            </div>
-            <div>
-              <dt>Maintenance</dt>
-              <dd>{formatMoney(report.maintenanceCost)}</dd>
-            </div>
-            <div>
-              <dt>Loan Interest</dt>
-              <dd>{formatMoney(report.loanInterest)}</dd>
-            </div>
-            <div>
-              <dt>Net Profit</dt>
-              <dd>{formatMoney(report.netProfit)}</dd>
-            </div>
-            <div>
-              <dt>Cash</dt>
-              <dd>{formatMoney(report.cash)}</dd>
-            </div>
-            <div>
-              <dt>Debt</dt>
-              <dd>{formatMoney(report.debt)}</dd>
-            </div>
-            <div>
-              <dt>Satisfaction</dt>
-              <dd>{formatPercent(report.satisfaction)}</dd>
-            </div>
-            <div>
-              <dt>Reputation</dt>
-              <dd>{report.reputation.toFixed(2)}</dd>
-            </div>
-            <div>
-              <dt>Park Value</dt>
-              <dd>{formatMoney(report.parkValue)}</dd>
-            </div>
-          </dl>
 
-          <div className="message-stack">
-            {report.messages.map((message) => (
-              <p className="report-message" key={message}>
-                {message}
-              </p>
-            ))}
+            <div className="report-block">
+              <h3>Financials</h3>
+              <dl className="report-list">
+                <div><dt>Ticket Revenue</dt><dd>{formatMoney(visibleReport.ticketRevenue)}</dd></div>
+                <div>
+                  <dt title="In-park revenue increases when more visitors come, when satisfaction is higher, and when the market spends more per guest.">
+                    In-Park Revenue
+                  </dt>
+                  <dd>{formatMoney(visibleReport.inParkRevenue)}</dd>
+                </div>
+                <div><dt>Average Guest Spend</dt><dd>{formatMoney(visibleReport.averageGuestSpend)}</dd></div>
+                <div><dt>Market Spending Modifier</dt><dd>{visibleReport.marketSpendingModifier.toFixed(2)}x</dd></div>
+                <div><dt>Satisfaction Effect</dt><dd>{formatPercent(visibleReport.satisfactionRevenueModifier)}</dd></div>
+                <div><dt>Total Revenue</dt><dd>{formatMoney(visibleReport.totalRevenue)}</dd></div>
+                <div><dt>Maintenance</dt><dd>{formatMoney(visibleReport.maintenanceCost)}</dd></div>
+                <div><dt>Loan Interest</dt><dd>{formatMoney(visibleReport.loanInterest)}</dd></div>
+                <div><dt>Net Profit</dt><dd>{formatMoney(visibleReport.netProfit)}</dd></div>
+                <div><dt>Cash</dt><dd>{formatMoney(visibleReport.cash)}</dd></div>
+                <div><dt>Debt</dt><dd>{formatMoney(visibleReport.debt)}</dd></div>
+                <div><dt>Park Value</dt><dd>{formatMoney(visibleReport.parkValue)}</dd></div>
+              </dl>
+            </div>
+          </div>
+
+          <div className="report-block">
+            <h3>What Changed</h3>
+            <div className="message-stack">
+              {visibleReport.messages.map((message) => (
+                <p className="report-message" key={message}>
+                  {message}
+                </p>
+              ))}
+            </div>
+          </div>
+
+          <div className="report-block">
+            <h3>Ride Performance</h3>
+            {visibleReport.ridePerformance.length === 0 ? (
+              <p className="empty-state">No active rides were available for this month’s performance breakdown.</p>
+            ) : (
+              <div className="ride-performance-list">
+                {visibleReport.ridePerformance.map((ride) => (
+                  <article className="ride-performance-card" key={`${visibleReport.month}-${ride.instanceId}`}>
+                    <div className="ride-card__header">
+                      <h4>{ride.name}</h4>
+                      <span className="chip">{ride.category}</span>
+                    </div>
+                    <dl className="report-list">
+                      <div><dt>Estimated Visitors</dt><dd>{formatNumber(ride.estimatedVisitors)}</dd></div>
+                      <div><dt>Utilization</dt><dd>{formatPercent(ride.utilizationRate)}</dd></div>
+                      <div><dt>Attraction Contribution</dt><dd>{ride.attractionContribution.toFixed(1)}</dd></div>
+                      <div><dt>Market Fit</dt><dd>{ride.marketFitScore.toFixed(2)} / 1.00</dd></div>
+                      <div><dt>Maintenance</dt><dd>{formatMoney(ride.maintenanceCost)}</dd></div>
+                    </dl>
+                    <p className="report-message">{ride.comment}</p>
+                  </article>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

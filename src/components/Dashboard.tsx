@@ -1,17 +1,20 @@
 import type { GameState } from "../game/types";
 import { getCurrentParkValue } from "../game/simulation";
+import { formatMoney, formatNumber, formatPercent } from "../utils/format";
 import { buildStatBarData, StatBar } from "./StatBar";
 import { RideCatalog } from "./RideCatalog";
 import { BuiltRides } from "./BuiltRides";
 import { PricingPanel } from "./PricingPanel";
 import { LoanPanel } from "./LoanPanel";
 import { MonthlyReport } from "./MonthlyReport";
+import { PlannedBuilds } from "./PlannedBuilds";
 
 type DashboardProps = {
   gameState: GameState;
   error: string | null;
   onReset: () => void;
   onBuildRide: (rideId: string) => void;
+  onCancelPlannedRide: (planId: string) => void;
   onSetTicketPrice: (price: number) => void;
   onBorrow: () => void;
   onRepay: () => void;
@@ -23,24 +26,25 @@ export function Dashboard({
   error,
   onReset,
   onBuildRide,
+  onCancelPlannedRide,
   onSetTicketPrice,
   onBorrow,
   onRepay,
   onRunMonth
 }: DashboardProps) {
   const latestReport = gameState.latestReport;
-  const landRemaining = gameState.landCapacity - gameState.landUsed;
+  const availableCash = gameState.cash - gameState.reservedCash;
+  const availableArea = gameState.areaCapacity - gameState.areaUsed - gameState.reservedArea;
   const stats = buildStatBarData({
     month: gameState.month,
-    cash: gameState.cash,
-    monthlyProfit: latestReport?.netProfit ?? 0,
-    visitors: latestReport?.visitors ?? 0,
-    satisfaction: gameState.satisfaction,
-    reputation: gameState.reputation,
-    parkValue: getCurrentParkValue(gameState),
-    debt: gameState.debt,
-    landUsed: gameState.landUsed,
-    landCapacity: gameState.landCapacity
+    cash: formatMoney(gameState.cash),
+    monthlyProfit: formatMoney(latestReport?.netProfit ?? 0),
+    visitors: formatNumber(latestReport?.visitors ?? 0),
+    satisfaction: formatPercent(gameState.satisfaction),
+    reputation: gameState.reputation.toFixed(2),
+    parkValue: formatMoney(getCurrentParkValue(gameState)),
+    debt: formatMoney(gameState.debt),
+    areaSummary: `${gameState.areaUsed + gameState.reservedArea} / ${gameState.areaCapacity}`
   });
 
   return (
@@ -60,11 +64,19 @@ export function Dashboard({
 
       <StatBar stats={stats} />
 
+      <div className="resource-strip">
+        <span>Available Cash: {formatMoney(availableCash)}</span>
+        <span>Reserved Cash: {formatMoney(gameState.reservedCash)}</span>
+        <span>Available Area: {availableArea}</span>
+        <span>Reserved Area: {gameState.reservedArea}</span>
+      </div>
+
       {error ? <div className="alert">{error}</div> : null}
 
       <div className="dashboard-grid">
-        <RideCatalog cash={gameState.cash} landRemaining={landRemaining} onBuild={onBuildRide} />
-        <BuiltRides rides={gameState.rides} />
+        <RideCatalog availableCash={availableCash} availableArea={availableArea} onBuild={onBuildRide} />
+        <PlannedBuilds plannedRides={gameState.plannedRides} onCancel={onCancelPlannedRide} />
+        <BuiltRides rides={gameState.activeRides} />
         <PricingPanel ticketPrice={gameState.ticketPrice} onSetTicketPrice={onSetTicketPrice} />
         <LoanPanel
           cash={gameState.cash}
@@ -74,7 +86,7 @@ export function Dashboard({
           onBorrow={onBorrow}
           onRepay={onRepay}
         />
-        <MonthlyReport report={gameState.latestReport} />
+        <MonthlyReport latestReport={gameState.latestReport} monthlyHistory={gameState.monthlyHistory} />
       </div>
 
       <div className="footer-actions">

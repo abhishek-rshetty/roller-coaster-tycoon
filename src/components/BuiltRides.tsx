@@ -11,18 +11,18 @@ export function BuiltRides({ rides }: BuiltRidesProps) {
       <div className="panel-header">
         <div>
           <p className="eyebrow">Operations</p>
-          <h2>Built Rides</h2>
+          <h2>Active Rides</h2>
         </div>
       </div>
 
       {rides.length === 0 ? (
-        <p className="empty-state">No rides yet. Build your first attraction to start drawing visitors.</p>
+        <p className="empty-state">No active rides yet. Planned rides become active after you run the next month.</p>
       ) : (
         <div className="table-like">
           <div className="table-like__head">
             <span>Ride</span>
             <span>Category</span>
-            <span>Footprint</span>
+            <span>Area</span>
             <span>Maintenance</span>
             <span>Capacity</span>
           </div>
@@ -30,7 +30,7 @@ export function BuiltRides({ rides }: BuiltRidesProps) {
             <div className="table-like__row" key={ride.instanceId}>
               <span>{ride.name}</span>
               <span>{ride.category}</span>
-              <span>{ride.footprint}</span>
+              <span>{ride.areaRequired}</span>
               <span>{formatMoney(ride.monthlyMaintenance)}</span>
               <span>{formatNumber(ride.monthlyCapacity)}</span>
             </div>

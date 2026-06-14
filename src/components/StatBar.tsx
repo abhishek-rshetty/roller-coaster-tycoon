@@ -1,5 +1,3 @@
-import { formatMoney, formatPercent } from "../utils/format";
-
 type StatBarProps = {
   stats: Array<{
     label: string;
@@ -23,15 +21,14 @@ export function StatBar({ stats }: StatBarProps) {
 
 export function buildStatBarData(input: {
   month: number;
-  cash: number;
-  monthlyProfit: number;
-  visitors: number;
-  satisfaction: number;
-  reputation: number;
-  parkValue: number;
-  debt: number;
-  landUsed: number;
-  landCapacity: number;
+  cash: string;
+  monthlyProfit: string;
+  visitors: string;
+  satisfaction: string;
+  reputation: string;
+  parkValue: string;
+  debt: string;
+  areaSummary: string;
 }): Array<{
   label: string;
   value: string;
@@ -39,17 +36,13 @@ export function buildStatBarData(input: {
 }> {
   return [
     { label: "Month", value: String(input.month) },
-    { label: "Cash", value: formatMoney(input.cash), tone: input.cash >= 0 ? "good" : "bad" },
-    {
-      label: "Monthly Profit",
-      value: formatMoney(input.monthlyProfit),
-      tone: input.monthlyProfit >= 0 ? "good" : "bad"
-    },
-    { label: "Visitors", value: input.visitors.toLocaleString() },
-    { label: "Satisfaction", value: formatPercent(input.satisfaction) },
-    { label: "Reputation", value: input.reputation.toFixed(2) },
-    { label: "Park Value", value: formatMoney(input.parkValue), tone: "good" },
-    { label: "Debt", value: formatMoney(input.debt), tone: input.debt > 0 ? "bad" : "neutral" },
-    { label: "Land", value: `${input.landUsed} / ${input.landCapacity}` }
+    { label: "Cash", value: input.cash, tone: input.cash.startsWith("-") ? "bad" : "good" },
+    { label: "Monthly Profit", value: input.monthlyProfit },
+    { label: "Visitors", value: input.visitors },
+    { label: "Satisfaction", value: input.satisfaction },
+    { label: "Reputation", value: input.reputation },
+    { label: "Park Value", value: input.parkValue, tone: "good" },
+    { label: "Debt", value: input.debt },
+    { label: "Area", value: input.areaSummary }
   ];
 }

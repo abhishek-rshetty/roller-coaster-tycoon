@@ -44,10 +44,14 @@ export function LoanPanel({
 
       <div className="button-row">
         <button className="button button--secondary" disabled={debt + LOAN_INCREMENT > maxDebt} onClick={onBorrow}>
-          Borrow $50,000
+          Borrow ₹50,000
         </button>
-        <button className="button button--secondary" disabled={cash < LOAN_INCREMENT || debt < LOAN_INCREMENT} onClick={onRepay}>
-          Repay $50,000
+        <button
+          className="button button--secondary"
+          disabled={cash < LOAN_INCREMENT || debt < LOAN_INCREMENT}
+          onClick={onRepay}
+        >
+          Repay ₹50,000
         </button>
       </div>
     </section>

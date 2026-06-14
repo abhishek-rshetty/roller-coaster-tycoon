@@ -10,11 +10,14 @@ export const STARTING_STATE: Omit<GameState, "selectedLocation"> = {
   maxDebt: 1000000,
   annualInterestRate: 0.08,
   ticketPrice: 20,
-  landUsed: 0,
-  landCapacity: 30,
+  areaUsed: 0,
+  areaCapacity: 30,
+  reservedCash: 0,
+  reservedArea: 0,
   reputation: 0.5,
   satisfaction: 0.7,
-  rides: [],
+  activeRides: [],
+  plannedRides: [],
   latestReport: null,
   monthlyHistory: []
 };

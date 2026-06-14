@@ -24,7 +24,7 @@ export type RideDefinition = {
   name: string;
   category: RideCategory;
   buildCost: number;
-  footprint: number;
+  areaRequired: number;
   monthlyMaintenance: number;
   monthlyCapacity: number;
   familyAppeal: number;
@@ -34,9 +34,26 @@ export type RideDefinition = {
   baseAttraction: number;
 };
 
+export type PlannedRide = RideDefinition & {
+  planId: string;
+  plannedMonth: number;
+};
+
 export type BuiltRide = RideDefinition & {
   instanceId: string;
   builtMonth: number;
+};
+
+export type RidePerformanceReport = {
+  instanceId: string;
+  name: string;
+  category: RideCategory;
+  estimatedVisitors: number;
+  utilizationRate: number;
+  attractionContribution: number;
+  marketFitScore: number;
+  maintenanceCost: number;
+  comment: string;
 };
 
 export type MonthlyReport = {
@@ -53,9 +70,13 @@ export type MonthlyReport = {
   satisfaction: number;
   reputation: number;
   parkValue: number;
-  landUsed: number;
-  landCapacity: number;
+  areaUsed: number;
+  areaCapacity: number;
+  averageGuestSpend: number;
+  marketSpendingModifier: number;
+  satisfactionRevenueModifier: number;
   messages: string[];
+  ridePerformance: RidePerformanceReport[];
 };
 
 export type GameState = {
@@ -66,11 +87,14 @@ export type GameState = {
   maxDebt: number;
   annualInterestRate: number;
   ticketPrice: number;
-  landUsed: number;
-  landCapacity: number;
+  areaUsed: number;
+  areaCapacity: number;
+  reservedCash: number;
+  reservedArea: number;
   reputation: number;
   satisfaction: number;
-  rides: BuiltRide[];
+  activeRides: BuiltRide[];
+  plannedRides: PlannedRide[];
   latestReport: MonthlyReport | null;
   monthlyHistory: MonthlyReport[];
 };

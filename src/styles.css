@@ -23,7 +23,8 @@ body {
   min-height: 100vh;
 }
 
-button {
+button,
+select {
   font: inherit;
 }
 
@@ -32,7 +33,7 @@ button {
 }
 
 .shell {
-  width: min(1200px, calc(100% - 2rem));
+  width: min(1240px, calc(100% - 2rem));
   margin: 0 auto;
   padding: 2rem 0 3rem;
 }
@@ -82,7 +83,8 @@ button {
 .dashboard-grid,
 .card-grid,
 .stats-grid,
-.report-grid {
+.report-section-grid,
+.ride-performance-list {
   display: grid;
   gap: 1rem;
 }
@@ -94,26 +96,31 @@ button {
 
 .dashboard-grid > .panel:nth-child(1),
 .dashboard-grid > .panel:nth-child(2),
-.dashboard-grid > .panel:nth-child(5) {
+.dashboard-grid > .panel:nth-child(3),
+.dashboard-grid > .panel:nth-child(6) {
   grid-column: span 12;
 }
 
-.dashboard-grid > .panel:nth-child(3),
-.dashboard-grid > .panel:nth-child(4) {
+.dashboard-grid > .panel:nth-child(4),
+.dashboard-grid > .panel:nth-child(5) {
   grid-column: span 6;
 }
 
 .card-grid {
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
 }
 
 .stats-grid {
   grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
-.report-grid {
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+.report-section-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ride-performance-list {
+  grid-template-columns: repeat(auto-fit, minmax(270px, 1fr));
 }
 
 .panel,
@@ -122,7 +129,8 @@ button {
 }
 
 .location-card,
-.ride-card {
+.ride-card,
+.ride-performance-card {
   background: rgba(248, 242, 229, 0.9);
   border-radius: 18px;
   padding: 1.1rem;
@@ -130,25 +138,19 @@ button {
 }
 
 .ride-card dl,
-.report-grid,
-.rating-list,
-.info-list {
-  margin: 0;
-}
-
-.ride-card dl,
-.report-grid,
 .rating-list,
 .info-list,
-.table-like {
+.table-like,
+.report-list {
+  margin: 0;
   display: grid;
   gap: 0.6rem;
 }
 
 .ride-card dl div,
-.report-grid div,
 .rating-list div,
-.info-list div {
+.info-list div,
+.report-list div {
   display: flex;
   justify-content: space-between;
   gap: 1rem;
@@ -164,6 +166,12 @@ button {
   grid-template-columns: 2fr 1fr 1fr 1.2fr 1.2fr;
   gap: 0.75rem;
   padding-top: 0.75rem;
+  align-items: center;
+}
+
+.planned-head,
+.planned-row {
+  grid-template-columns: 2fr 1fr 0.8fr 1.2fr 1fr;
 }
 
 .table-like__head {
@@ -211,6 +219,10 @@ button {
 
 .button--large {
   padding-inline: 1.75rem;
+}
+
+.button--compact {
+  padding: 0.45rem 0.8rem;
 }
 
 .eyebrow {
@@ -276,11 +288,72 @@ button {
   gap: 1rem;
 }
 
+.report-block {
+  border: 1px solid rgba(17, 34, 30, 0.08);
+  border-radius: 16px;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.38);
+}
+
+.report-block h3 {
+  margin-top: 0;
+  margin-bottom: 0.8rem;
+}
+
+.report-list dt {
+  color: #5f756c;
+}
+
+.report-list dd {
+  margin: 0;
+  text-align: right;
+}
+
 .report-message {
   margin: 0;
   padding: 0.85rem 1rem;
   border-radius: 14px;
   background: #eef5f2;
+}
+
+.resource-strip {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  color: #355147;
+  font-size: 0.95rem;
+}
+
+.help-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.help-badge {
+  display: inline-grid;
+  place-items: center;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: #dbe8e1;
+  color: #355147;
+  font-size: 0.72rem;
+}
+
+.month-picker {
+  display: grid;
+  gap: 0.35rem;
+  color: #355147;
+  font-size: 0.9rem;
+}
+
+.month-picker select {
+  border-radius: 12px;
+  border: 1px solid rgba(17, 34, 30, 0.12);
+  padding: 0.5rem 0.75rem;
+  background: white;
 }
 
 .footer-actions {
@@ -291,18 +364,25 @@ button {
 h1,
 h2,
 h3,
+h4,
 p {
   margin-top: 0;
 }
 
 @media (max-width: 900px) {
-  .dashboard-grid > .panel:nth-child(3),
-  .dashboard-grid > .panel:nth-child(4) {
+  .dashboard-grid > .panel:nth-child(4),
+  .dashboard-grid > .panel:nth-child(5) {
     grid-column: span 12;
   }
 
+  .report-section-grid {
+    grid-template-columns: 1fr;
+  }
+
   .table-like__head,
-  .table-like__row {
+  .table-like__row,
+  .planned-head,
+  .planned-row {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 

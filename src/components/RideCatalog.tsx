@@ -2,12 +2,30 @@ import { rideCatalog } from "../data/rides";
 import { formatMoney, formatNumber } from "../utils/format";
 
 type RideCatalogProps = {
-  cash: number;
-  landRemaining: number;
+  availableCash: number;
+  availableArea: number;
   onBuild: (rideId: string) => void;
 };
 
-export function RideCatalog({ cash, landRemaining, onBuild }: RideCatalogProps) {
+const statHelp: Record<string, string> = {
+  Area: "How much park area this ride uses.",
+  Maintenance: "Monthly operating cost for keeping this ride running.",
+  Capacity: "Estimated maximum visitors this ride can help serve each month.",
+  "Family Appeal": "How strongly this ride attracts family-focused visitors.",
+  "Thrill Appeal": "How strongly this ride attracts thrill-seeking visitors.",
+  "Tourist Appeal": "How strongly this ride attracts tourist-heavy demand."
+};
+
+function HelpLabel({ label }: { label: keyof typeof statHelp }) {
+  return (
+    <span className="help-label" title={statHelp[label]}>
+      {label}
+      <span className="help-badge">i</span>
+    </span>
+  );
+}
+
+export function RideCatalog({ availableCash, availableArea, onBuild }: RideCatalogProps) {
   return (
     <section className="panel">
       <div className="panel-header">
@@ -19,8 +37,8 @@ export function RideCatalog({ cash, landRemaining, onBuild }: RideCatalogProps) 
 
       <div className="card-grid">
         {rideCatalog.map((ride) => {
-          const insufficientCash = cash < ride.buildCost;
-          const insufficientLand = landRemaining < ride.footprint;
+          const insufficientCash = availableCash < ride.buildCost;
+          const insufficientArea = availableArea < ride.areaRequired;
 
           return (
             <article className="ride-card" key={ride.id}>
@@ -30,40 +48,52 @@ export function RideCatalog({ cash, landRemaining, onBuild }: RideCatalogProps) 
               </div>
               <dl>
                 <div>
-                  <dt>Build cost</dt>
+                  <dt>Build Cost</dt>
                   <dd>{formatMoney(ride.buildCost)}</dd>
                 </div>
                 <div>
-                  <dt>Footprint</dt>
-                  <dd>{ride.footprint}</dd>
+                  <dt>
+                    <HelpLabel label="Area" />
+                  </dt>
+                  <dd>{ride.areaRequired}</dd>
                 </div>
                 <div>
-                  <dt>Maintenance</dt>
+                  <dt>
+                    <HelpLabel label="Maintenance" />
+                  </dt>
                   <dd>{formatMoney(ride.monthlyMaintenance)}</dd>
                 </div>
                 <div>
-                  <dt>Capacity</dt>
+                  <dt>
+                    <HelpLabel label="Capacity" />
+                  </dt>
                   <dd>{formatNumber(ride.monthlyCapacity)}</dd>
                 </div>
                 <div>
-                  <dt>Family</dt>
-                  <dd>{ride.familyAppeal}</dd>
+                  <dt>
+                    <HelpLabel label="Family Appeal" />
+                  </dt>
+                  <dd>{ride.familyAppeal} / 5</dd>
                 </div>
                 <div>
-                  <dt>Thrill</dt>
-                  <dd>{ride.thrillAppeal}</dd>
+                  <dt>
+                    <HelpLabel label="Thrill Appeal" />
+                  </dt>
+                  <dd>{ride.thrillAppeal} / 5</dd>
                 </div>
                 <div>
-                  <dt>Tourist</dt>
-                  <dd>{ride.touristAppeal}</dd>
+                  <dt>
+                    <HelpLabel label="Tourist Appeal" />
+                  </dt>
+                  <dd>{ride.touristAppeal} / 5</dd>
                 </div>
               </dl>
               <button
                 className="button button--secondary"
-                disabled={insufficientCash || insufficientLand}
+                disabled={insufficientCash || insufficientArea}
                 onClick={() => onBuild(ride.id)}
               >
-                {insufficientCash ? "Need more cash" : insufficientLand ? "Need more land" : "Build"}
+                {insufficientCash ? "Need more cash" : insufficientArea ? "Need more area" : "Plan Build"}
               </button>
             </article>
           );

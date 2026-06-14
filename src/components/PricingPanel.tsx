@@ -13,7 +13,7 @@ export function PricingPanel({ ticketPrice, onSetTicketPrice }: PricingPanelProp
           <p className="eyebrow">Pricing</p>
           <h2>Ticket Price</h2>
         </div>
-        <strong className="big-number">${ticketPrice}</strong>
+        <strong className="big-number">₹{ticketPrice}</strong>
       </div>
 
       <div className="button-row">
@@ -23,7 +23,7 @@ export function PricingPanel({ ticketPrice, onSetTicketPrice }: PricingPanelProp
             key={price}
             onClick={() => onSetTicketPrice(price)}
           >
-            ${price}
+            ₹{price}
           </button>
         ))}
       </div>
