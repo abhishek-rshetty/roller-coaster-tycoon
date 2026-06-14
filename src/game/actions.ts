@@ -2,6 +2,7 @@ import { locations } from "../data/locations";
 import { rideCatalog } from "../data/rides";
 import { generateId } from "../utils/format";
 import { ALLOWED_TICKET_PRICES, LOAN_INCREMENT, STARTING_STATE } from "./constants";
+import { getRideDepreciatedValue } from "./mechanics";
 import { buildMonthlyReport, simulateMonth } from "./simulation";
 import type { BuiltRide, GameState } from "./types";
 
@@ -66,6 +67,43 @@ export function cancelPlannedRide(gameState: GameState, planId: string): GameSta
   };
 }
 
+export function planRideDemolition(gameState: GameState, instanceId: string): GameState {
+  const activeRide = gameState.activeRides.find((ride) => ride.instanceId === instanceId);
+
+  if (!activeRide) {
+    throw new Error("Ride not found.");
+  }
+
+  if (gameState.plannedDemolitions.some((demolition) => demolition.instanceId === instanceId)) {
+    throw new Error("Ride is already planned for demolition.");
+  }
+
+  return {
+    ...gameState,
+    plannedDemolitions: [
+      ...gameState.plannedDemolitions,
+      {
+        instanceId,
+        plannedMonth: gameState.month,
+        rideName: activeRide.name,
+        refundValue: getRideDepreciatedValue(activeRide, gameState.month),
+        areaReleased: activeRide.areaRequired
+      }
+    ]
+  };
+}
+
+export function cancelRideDemolition(gameState: GameState, instanceId: string): GameState {
+  if (!gameState.plannedDemolitions.some((demolition) => demolition.instanceId === instanceId)) {
+    throw new Error("Planned demolition not found.");
+  }
+
+  return {
+    ...gameState,
+    plannedDemolitions: gameState.plannedDemolitions.filter((demolition) => demolition.instanceId !== instanceId)
+  };
+}
+
 export function setTicketPrice(gameState: GameState, price: number): GameState {
   if (!ALLOWED_TICKET_PRICES.includes(price as (typeof ALLOWED_TICKET_PRICES)[number])) {
     throw new Error("Ticket price must be one of the allowed values.");
@@ -126,6 +164,9 @@ export function simulateNextMonth(gameState: GameState): GameState {
   const latestReport = buildMonthlyReport(gameState, snapshot);
   const activatedRides = activatePlannedRides(gameState);
   const activatedArea = gameState.plannedRides.reduce((total, ride) => total + ride.areaRequired, 0);
+  const demolitionIds = new Set(gameState.plannedDemolitions.map((demolition) => demolition.instanceId));
+  const releasedArea = gameState.plannedDemolitions.reduce((total, demolition) => total + demolition.areaReleased, 0);
+  const remainingActiveRides = gameState.activeRides.filter((ride) => !demolitionIds.has(ride.instanceId));
 
   return {
     ...gameState,
@@ -133,11 +174,12 @@ export function simulateNextMonth(gameState: GameState): GameState {
     cash: latestReport.cash,
     satisfaction: latestReport.satisfaction,
     reputation: latestReport.reputation,
-    areaUsed: gameState.areaUsed + activatedArea,
+    areaUsed: gameState.areaUsed + activatedArea - releasedArea,
     reservedCash: 0,
     reservedArea: 0,
-    activeRides: [...gameState.activeRides, ...activatedRides],
+    activeRides: [...remainingActiveRides, ...activatedRides],
     plannedRides: [],
+    plannedDemolitions: [],
     latestReport,
     monthlyHistory: [...gameState.monthlyHistory, latestReport],
     selectedLocation: {

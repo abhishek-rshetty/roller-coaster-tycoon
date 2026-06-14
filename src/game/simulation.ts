@@ -1,19 +1,6 @@
 import { clamp } from "../utils/math";
-import type {
-  BuiltRide,
-  GameState,
-  MonthlyReport,
-  RideDefinition,
-  RidePerformanceReport
-} from "./types";
-
-type RideInsight = {
-  ride: BuiltRide;
-  marketFit: number;
-  rideAttraction: number;
-  duplicateMultiplier: number;
-  adjustedAttraction: number;
-};
+import { buildRideInsights, buildRidePerformanceReport } from "./mechanics";
+import type { BuiltRide, GameState, MonthlyReport } from "./types";
 
 type SimulationSnapshot = {
   rawMarketDemand: number;
@@ -26,6 +13,7 @@ type SimulationSnapshot = {
   totalRevenue: number;
   maintenanceCost: number;
   loanInterest: number;
+  demolitionProceeds: number;
   netProfit: number;
   cash: number;
   satisfaction: number;
@@ -34,42 +22,8 @@ type SimulationSnapshot = {
   marketSpendingModifier: number;
   satisfactionRevenueModifier: number;
   messages: string[];
-  ridePerformance: RidePerformanceReport[];
+  ridePerformance: MonthlyReport["ridePerformance"];
 };
-
-export function getMarketFit(ride: RideDefinition, state: GameState): number {
-  return (
-    ride.familyAppeal * state.selectedLocation.familyShare +
-    ride.thrillAppeal * state.selectedLocation.thrillShare +
-    ride.touristAppeal * state.selectedLocation.touristShare
-  );
-}
-
-export function getDuplicateMultiplier(duplicateIndex: number): number {
-  return Math.max(0.4, 1 - duplicateIndex * 0.2);
-}
-
-function buildRideInsights(state: GameState): RideInsight[] {
-  const duplicateCounts = new Map<string, number>();
-
-  return state.activeRides.map((ride) => {
-    const seenCount = duplicateCounts.get(ride.id) ?? 0;
-    const marketFit = getMarketFit(ride, state);
-    const rideAttraction = ride.baseAttraction * (marketFit / 5);
-    const duplicateMultiplier = getDuplicateMultiplier(seenCount);
-    const adjustedAttraction = rideAttraction * duplicateMultiplier;
-
-    duplicateCounts.set(ride.id, seenCount + 1);
-
-    return {
-      ride,
-      marketFit,
-      rideAttraction,
-      duplicateMultiplier,
-      adjustedAttraction
-    };
-  });
-}
 
 export function getRawMarketDemand(state: GameState): number {
   const localDemand = state.selectedLocation.population * 0.015;
@@ -111,7 +65,7 @@ function getVisitors(state: GameState, rawMarketDemand: number, totalAttraction:
     return getSoftOpeningVisitors(state, rawMarketDemand);
   }
 
-  const attractionModifier = Math.min(1.5, totalAttraction / 100);
+  const attractionModifier = Math.min(1.5, 0.3 + totalAttraction / 120);
   const visitorsBeforeCapacity =
     rawMarketDemand *
     attractionModifier *
@@ -152,42 +106,8 @@ function getParkValue(state: GameState, netProfit: number, cash: number): number
   return cash + rideAssetValue + profitValue - state.debt;
 }
 
-function buildRidePerformanceReport(state: GameState, visitors: number): RidePerformanceReport[] {
-  const rideInsights = buildRideInsights(state);
-  const totalAdjustedAttraction = rideInsights.reduce((total, insight) => total + insight.adjustedAttraction, 0);
-
-  return rideInsights.map((insight) => {
-    const attractionShare = totalAdjustedAttraction > 0 ? insight.adjustedAttraction / totalAdjustedAttraction : 0;
-    const estimatedVisitors = Math.floor(visitors * attractionShare);
-    const utilizationRate = clamp(estimatedVisitors / insight.ride.monthlyCapacity, 0, 1);
-    const marketFitScore = insight.marketFit / 5;
-
-    let comment = "Steady contributor this month.";
-
-    if (insight.duplicateMultiplier < 1) {
-      comment = "Value is reduced because similar rides are already in the park.";
-    } else if (utilizationRate >= 0.9) {
-      comment = "This ride is close to capacity and may benefit from support expansion.";
-    } else if (marketFitScore >= 0.75 && utilizationRate >= 0.6) {
-      comment = "Strong fit for this market and performing well.";
-    } else if (marketFitScore <= 0.45) {
-      comment = "This ride is not a strong match for your current market.";
-    } else if (insight.ride.monthlyMaintenance >= 15000 && utilizationRate < 0.25) {
-      comment = "Expensive to maintain for its current demand.";
-    }
-
-    return {
-      instanceId: insight.ride.instanceId,
-      name: insight.ride.name,
-      category: insight.ride.category,
-      estimatedVisitors,
-      utilizationRate,
-      attractionContribution: attractionShare,
-      marketFitScore,
-      maintenanceCost: insight.ride.monthlyMaintenance,
-      comment
-    };
-  });
+function getPlannedDemolitionProceeds(state: GameState): number {
+  return state.plannedDemolitions.reduce((total, demolition) => total + demolition.refundValue, 0);
 }
 
 function buildMessages(
@@ -229,6 +149,10 @@ function buildMessages(
     messages.push("In-park revenue is being held back by low satisfaction or lower-spending market demand.");
   }
 
+  if (snapshot.demolitionProceeds > 0) {
+    messages.push("Demolition proceeds were added after the month closed, and the freed area is now available again.");
+  }
+
   if (snapshot.cash < 0 && previousState.debt >= previousState.maxDebt) {
     messages.push(
       "Your park is insolvent. You can continue playing, but you cannot build new rides until cash becomes positive."
@@ -258,8 +182,9 @@ export function simulateMonth(previousState: GameState): SimulationSnapshot {
   const totalRevenue = ticketRevenue + inParkRevenue;
   const maintenanceCost = previousState.activeRides.reduce((sum, ride) => sum + ride.monthlyMaintenance, 0);
   const loanInterest = previousState.debt * (previousState.annualInterestRate / 12);
+  const demolitionProceeds = getPlannedDemolitionProceeds(previousState);
   const netProfit = totalRevenue - maintenanceCost - loanInterest;
-  const cash = previousState.cash + netProfit;
+  const cash = previousState.cash + netProfit + demolitionProceeds;
   const reputation = clamp(previousState.reputation + (satisfaction - 0.7) * 0.15, 0.1, 2);
   const parkValue = getParkValue(previousState, netProfit, cash);
   const marketSpendingModifier = previousState.selectedLocation.spendingPower;
@@ -277,6 +202,7 @@ export function simulateMonth(previousState: GameState): SimulationSnapshot {
     totalRevenue,
     maintenanceCost,
     loanInterest,
+    demolitionProceeds,
     netProfit,
     cash,
     satisfaction,
@@ -302,6 +228,7 @@ export function buildMonthlyReport(previousState: GameState, snapshot: Simulatio
     totalRevenue: snapshot.totalRevenue,
     maintenanceCost: snapshot.maintenanceCost,
     loanInterest: snapshot.loanInterest,
+    demolitionProceeds: snapshot.demolitionProceeds,
     netProfit: snapshot.netProfit,
     cash: snapshot.cash,
     debt: previousState.debt,

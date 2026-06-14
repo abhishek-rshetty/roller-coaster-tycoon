@@ -6,9 +6,20 @@ import { InfoTip } from "./InfoTip";
 type MonthlyReportProps = {
   latestReport: MonthlyReportType | null;
   monthlyHistory: MonthlyReportType[];
+  currentMonth: number;
+  plannedDemolitionIds: string[];
+  onPlanDemolition: (instanceId: string) => void;
+  onCancelDemolition: (instanceId: string) => void;
 };
 
-export function MonthlyReport({ latestReport, monthlyHistory }: MonthlyReportProps) {
+export function MonthlyReport({
+  latestReport,
+  monthlyHistory,
+  currentMonth,
+  plannedDemolitionIds,
+  onPlanDemolition,
+  onCancelDemolition
+}: MonthlyReportProps) {
   const latestMonth = latestReport?.month ?? null;
   const [selectedMonth, setSelectedMonth] = useState<number | "latest">("latest");
 
@@ -86,6 +97,7 @@ export function MonthlyReport({ latestReport, monthlyHistory }: MonthlyReportPro
                 <div><dt>Total Revenue</dt><dd>{formatMoney(visibleReport.totalRevenue)}</dd></div>
                 <div><dt>Maintenance</dt><dd>{formatMoney(visibleReport.maintenanceCost)}</dd></div>
                 <div><dt>Loan Interest</dt><dd>{formatMoney(visibleReport.loanInterest)}</dd></div>
+                <div><dt>Demolition Proceeds</dt><dd>{formatMoney(visibleReport.demolitionProceeds)}</dd></div>
                 <div><dt>Net Profit</dt><dd>{formatMoney(visibleReport.netProfit)}</dd></div>
                 <div><dt>Cash</dt><dd>{formatMoney(visibleReport.cash)}</dd></div>
                 <div><dt>Debt</dt><dd>{formatMoney(visibleReport.debt)}</dd></div>
@@ -106,7 +118,11 @@ export function MonthlyReport({ latestReport, monthlyHistory }: MonthlyReportPro
           </div>
 
           <div className="report-block">
-            <h3>Ride Performance for Month {visibleReport.month}</h3>
+            <h3>
+              {visibleReport.month === currentMonth
+                ? `Ride Performance from Last Month (Month ${visibleReport.month})`
+                : `Ride Performance for Month ${visibleReport.month}`}
+            </h3>
             {visibleReport.ridePerformance.length === 0 ? (
               <p className="empty-state">No active rides were available for this month’s last-month performance breakdown.</p>
             ) : (
@@ -118,6 +134,7 @@ export function MonthlyReport({ latestReport, monthlyHistory }: MonthlyReportPro
                       <span className="chip">{ride.category}</span>
                     </div>
                     <dl className="report-list">
+                      <div><dt>Live Months</dt><dd>{ride.ageMonths}</dd></div>
                       <div><dt>Estimated Visitors</dt><dd>{formatNumber(ride.estimatedVisitors)}</dd></div>
                       <div>
                         <dt>
@@ -147,8 +164,30 @@ export function MonthlyReport({ latestReport, monthlyHistory }: MonthlyReportPro
                         <dd>{ride.marketFitScore.toFixed(2)} / 1.00</dd>
                       </div>
                       <div><dt>Maintenance</dt><dd>{formatMoney(ride.maintenanceCost)}</dd></div>
+                      <div>
+                        <dt>
+                          <InfoTip
+                            label="Demolition Refund"
+                            text="If you plan demolition now, this estimated payout arrives after the next month closes. It depreciates by 10% for each month the ride has been live."
+                          />
+                        </dt>
+                        <dd>{formatMoney(ride.demolitionRefundValue)}</dd>
+                      </div>
                     </dl>
                     <p className="report-message">{ride.comment}</p>
+                    {visibleReport.month === currentMonth ? (
+                      <div className="ride-performance-actions">
+                        {plannedDemolitionIds.includes(ride.instanceId) ? (
+                          <button className="button button--ghost button--compact" onClick={() => onCancelDemolition(ride.instanceId)}>
+                            Cancel Demolition
+                          </button>
+                        ) : (
+                          <button className="button button--secondary button--compact" onClick={() => onPlanDemolition(ride.instanceId)}>
+                            Plan Demolition
+                          </button>
+                        )}
+                      </div>
+                    ) : null}
                   </article>
                 ))}
               </div>

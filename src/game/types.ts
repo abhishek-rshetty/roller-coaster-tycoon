@@ -39,6 +39,14 @@ export type PlannedRide = RideDefinition & {
   plannedMonth: number;
 };
 
+export type PlannedDemolition = {
+  instanceId: string;
+  plannedMonth: number;
+  rideName: string;
+  refundValue: number;
+  areaReleased: number;
+};
+
 export type BuiltRide = RideDefinition & {
   instanceId: string;
   builtMonth: number;
@@ -48,11 +56,13 @@ export type RidePerformanceReport = {
   instanceId: string;
   name: string;
   category: RideCategory;
+  ageMonths: number;
   estimatedVisitors: number;
   utilizationRate: number;
   attractionContribution: number;
   marketFitScore: number;
   maintenanceCost: number;
+  demolitionRefundValue: number;
   comment: string;
 };
 
@@ -64,6 +74,7 @@ export type MonthlyReport = {
   totalRevenue: number;
   maintenanceCost: number;
   loanInterest: number;
+  demolitionProceeds: number;
   netProfit: number;
   cash: number;
   debt: number;
@@ -95,6 +106,7 @@ export type GameState = {
   satisfaction: number;
   activeRides: BuiltRide[];
   plannedRides: PlannedRide[];
+  plannedDemolitions: PlannedDemolition[];
   latestReport: MonthlyReport | null;
   monthlyHistory: MonthlyReport[];
 };

@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import {
   buildRide,
+  cancelRideDemolition,
   cancelPlannedRide,
   createNewGame,
+  planRideDemolition,
   repayLoan,
   setTicketPrice,
   simulateNextMonth,
@@ -124,6 +126,10 @@ function App() {
       onReset={handleResetRun}
       onBuildRide={(rideId) => applyAction((currentState) => buildRide(currentState, rideId))}
       onCancelPlannedRide={(planId) => applyAction((currentState) => cancelPlannedRide(currentState, planId))}
+      onPlanRideDemolition={(instanceId) => applyAction((currentState) => planRideDemolition(currentState, instanceId))}
+      onCancelRideDemolition={(instanceId) =>
+        applyAction((currentState) => cancelRideDemolition(currentState, instanceId))
+      }
       onSetTicketPrice={(price) => applyAction((currentState) => setTicketPrice(currentState, price))}
       onBorrow={() => applyAction((currentState) => takeLoan(currentState, 50000))}
       onRepay={() => applyAction((currentState) => repayLoan(currentState, 50000))}

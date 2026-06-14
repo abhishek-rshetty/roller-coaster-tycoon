@@ -18,6 +18,7 @@ export const STARTING_STATE: Omit<GameState, "selectedLocation"> = {
   satisfaction: 0.7,
   activeRides: [],
   plannedRides: [],
+  plannedDemolitions: [],
   latestReport: null,
   monthlyHistory: []
 };

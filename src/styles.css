@@ -389,6 +389,10 @@ select {
   font-size: 0.88rem;
 }
 
+.ride-performance-actions {
+  margin-top: 0.75rem;
+}
+
 .month-picker {
   display: grid;
   gap: 0.35rem;

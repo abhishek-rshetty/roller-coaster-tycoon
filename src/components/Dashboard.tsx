@@ -15,6 +15,8 @@ type DashboardProps = {
   onReset: () => void;
   onBuildRide: (rideId: string) => void;
   onCancelPlannedRide: (planId: string) => void;
+  onPlanRideDemolition: (instanceId: string) => void;
+  onCancelRideDemolition: (instanceId: string) => void;
   onSetTicketPrice: (price: number) => void;
   onBorrow: () => void;
   onRepay: () => void;
@@ -27,6 +29,8 @@ export function Dashboard({
   onReset,
   onBuildRide,
   onCancelPlannedRide,
+  onPlanRideDemolition,
+  onCancelRideDemolition,
   onSetTicketPrice,
   onBorrow,
   onRepay,
@@ -95,7 +99,14 @@ export function Dashboard({
           onBorrow={onBorrow}
           onRepay={onRepay}
         />
-        <MonthlyReport latestReport={gameState.latestReport} monthlyHistory={gameState.monthlyHistory} />
+        <MonthlyReport
+          latestReport={gameState.latestReport}
+          monthlyHistory={gameState.monthlyHistory}
+          currentMonth={gameState.month - 1}
+          plannedDemolitionIds={gameState.plannedDemolitions.map((demolition) => demolition.instanceId)}
+          onPlanDemolition={onPlanRideDemolition}
+          onCancelDemolition={onCancelRideDemolition}
+        />
       </div>
 
       <div className="footer-actions">
