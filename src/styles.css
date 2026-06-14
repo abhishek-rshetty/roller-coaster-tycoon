@@ -331,6 +331,13 @@ select {
   gap: 0.35rem;
 }
 
+.info-tip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
 .help-badge {
   display: inline-grid;
   place-items: center;
@@ -340,6 +347,46 @@ select {
   background: #dbe8e1;
   color: #355147;
   font-size: 0.72rem;
+}
+
+.help-badge--button {
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+
+.info-tip__content {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 0.4rem);
+  min-width: 220px;
+  max-width: 260px;
+  padding: 0.65rem 0.75rem;
+  border-radius: 12px;
+  background: #15332b;
+  color: #fff9f0;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  box-shadow: 0 12px 30px rgba(17, 34, 30, 0.2);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-4px);
+  transition:
+    opacity 140ms ease,
+    transform 140ms ease;
+  z-index: 10;
+}
+
+.info-tip:hover .info-tip__content,
+.info-tip:focus-within .info-tip__content {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.ride-queued-note {
+  margin: 0.75rem 0;
+  color: #355147;
+  font-size: 0.88rem;
 }
 
 .month-picker {

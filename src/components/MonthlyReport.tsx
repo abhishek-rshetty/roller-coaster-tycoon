@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { MonthlyReport as MonthlyReportType } from "../game/types";
 import { formatMoney, formatPercent, formatNumber } from "../utils/format";
+import { InfoTip } from "./InfoTip";
 
 type MonthlyReportProps = {
   latestReport: MonthlyReportType | null;
@@ -12,15 +13,8 @@ export function MonthlyReport({ latestReport, monthlyHistory }: MonthlyReportPro
   const [selectedMonth, setSelectedMonth] = useState<number | "latest">("latest");
 
   useEffect(() => {
-    if (selectedMonth === "latest") {
-      return;
-    }
-
-    const exists = monthlyHistory.some((report) => report.month === selectedMonth);
-    if (!exists) {
-      setSelectedMonth("latest");
-    }
-  }, [monthlyHistory, selectedMonth]);
+    setSelectedMonth("latest");
+  }, [monthlyHistory.length]);
 
   const visibleReport = useMemo(() => {
     if (selectedMonth === "latest") {
@@ -31,7 +25,7 @@ export function MonthlyReport({ latestReport, monthlyHistory }: MonthlyReportPro
   }, [latestReport, monthlyHistory, selectedMonth]);
 
   return (
-    <section className="panel panel--report">
+    <section className="panel panel--report" id="monthly-report">
       <div className="panel-header">
         <div>
           <p className="eyebrow">Feedback</p>
@@ -81,14 +75,14 @@ export function MonthlyReport({ latestReport, monthlyHistory }: MonthlyReportPro
               <dl className="report-list">
                 <div><dt>Ticket Revenue</dt><dd>{formatMoney(visibleReport.ticketRevenue)}</dd></div>
                 <div>
-                  <dt title="In-park revenue increases when more visitors come, when satisfaction is higher, and when the market spends more per guest.">
-                    In-Park Revenue
+                  <dt>
+                    <InfoTip
+                      label="In-Park Revenue"
+                      text="Improves when more visitors come in and when guest satisfaction is higher."
+                    />
                   </dt>
                   <dd>{formatMoney(visibleReport.inParkRevenue)}</dd>
                 </div>
-                <div><dt>Average Guest Spend</dt><dd>{formatMoney(visibleReport.averageGuestSpend)}</dd></div>
-                <div><dt>Market Spending Modifier</dt><dd>{visibleReport.marketSpendingModifier.toFixed(2)}x</dd></div>
-                <div><dt>Satisfaction Effect</dt><dd>{formatPercent(visibleReport.satisfactionRevenueModifier)}</dd></div>
                 <div><dt>Total Revenue</dt><dd>{formatMoney(visibleReport.totalRevenue)}</dd></div>
                 <div><dt>Maintenance</dt><dd>{formatMoney(visibleReport.maintenanceCost)}</dd></div>
                 <div><dt>Loan Interest</dt><dd>{formatMoney(visibleReport.loanInterest)}</dd></div>
@@ -112,9 +106,9 @@ export function MonthlyReport({ latestReport, monthlyHistory }: MonthlyReportPro
           </div>
 
           <div className="report-block">
-            <h3>Ride Performance</h3>
+            <h3>Ride Performance for Month {visibleReport.month}</h3>
             {visibleReport.ridePerformance.length === 0 ? (
-              <p className="empty-state">No active rides were available for this month’s performance breakdown.</p>
+              <p className="empty-state">No active rides were available for this month’s last-month performance breakdown.</p>
             ) : (
               <div className="ride-performance-list">
                 {visibleReport.ridePerformance.map((ride) => (
@@ -125,9 +119,33 @@ export function MonthlyReport({ latestReport, monthlyHistory }: MonthlyReportPro
                     </div>
                     <dl className="report-list">
                       <div><dt>Estimated Visitors</dt><dd>{formatNumber(ride.estimatedVisitors)}</dd></div>
-                      <div><dt>Utilization</dt><dd>{formatPercent(ride.utilizationRate)}</dd></div>
-                      <div><dt>Attraction Contribution</dt><dd>{ride.attractionContribution.toFixed(1)}</dd></div>
-                      <div><dt>Market Fit</dt><dd>{ride.marketFitScore.toFixed(2)} / 1.00</dd></div>
+                      <div>
+                        <dt>
+                          <InfoTip
+                            label="Utilization"
+                            text="How full this ride ran last month compared with its monthly capacity."
+                          />
+                        </dt>
+                        <dd>{formatPercent(ride.utilizationRate)}</dd>
+                      </div>
+                      <div>
+                        <dt>
+                          <InfoTip
+                            label="Attraction Share"
+                            text="This ride's share of the park's total ride pull last month."
+                          />
+                        </dt>
+                        <dd>{formatPercent(ride.attractionContribution)}</dd>
+                      </div>
+                      <div>
+                        <dt>
+                          <InfoTip
+                            label="Market Fit"
+                            text="How well this ride matches the current market mix for family, thrill, and tourist demand."
+                          />
+                        </dt>
+                        <dd>{ride.marketFitScore.toFixed(2)} / 1.00</dd>
+                      </div>
                       <div><dt>Maintenance</dt><dd>{formatMoney(ride.maintenanceCost)}</dd></div>
                     </dl>
                     <p className="report-message">{ride.comment}</p>

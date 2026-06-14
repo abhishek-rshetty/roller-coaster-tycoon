@@ -1,9 +1,11 @@
 import { rideCatalog } from "../data/rides";
 import { formatMoney, formatNumber } from "../utils/format";
+import { InfoTip } from "./InfoTip";
 
 type RideCatalogProps = {
   availableCash: number;
   availableArea: number;
+  plannedRideCounts: Record<string, number>;
   onBuild: (rideId: string) => void;
 };
 
@@ -16,16 +18,7 @@ const statHelp: Record<string, string> = {
   "Tourist Appeal": "How strongly this ride attracts tourist-heavy demand."
 };
 
-function HelpLabel({ label }: { label: keyof typeof statHelp }) {
-  return (
-    <span className="help-label" title={statHelp[label]}>
-      {label}
-      <span className="help-badge">i</span>
-    </span>
-  );
-}
-
-export function RideCatalog({ availableCash, availableArea, onBuild }: RideCatalogProps) {
+export function RideCatalog({ availableCash, availableArea, plannedRideCounts, onBuild }: RideCatalogProps) {
   return (
     <section className="panel">
       <div className="panel-header">
@@ -39,6 +32,7 @@ export function RideCatalog({ availableCash, availableArea, onBuild }: RideCatal
         {rideCatalog.map((ride) => {
           const insufficientCash = availableCash < ride.buildCost;
           const insufficientArea = availableArea < ride.areaRequired;
+          const queuedCount = plannedRideCounts[ride.id] ?? 0;
 
           return (
             <article className="ride-card" key={ride.id}>
@@ -53,47 +47,54 @@ export function RideCatalog({ availableCash, availableArea, onBuild }: RideCatal
                 </div>
                 <div>
                   <dt>
-                    <HelpLabel label="Area" />
+                    <InfoTip label="Area" text={statHelp.Area} />
                   </dt>
                   <dd>{ride.areaRequired}</dd>
                 </div>
                 <div>
                   <dt>
-                    <HelpLabel label="Maintenance" />
+                    <InfoTip label="Maintenance" text={statHelp.Maintenance} />
                   </dt>
                   <dd>{formatMoney(ride.monthlyMaintenance)}</dd>
                 </div>
                 <div>
                   <dt>
-                    <HelpLabel label="Capacity" />
+                    <InfoTip label="Capacity" text={statHelp.Capacity} />
                   </dt>
                   <dd>{formatNumber(ride.monthlyCapacity)}</dd>
                 </div>
                 <div>
                   <dt>
-                    <HelpLabel label="Family Appeal" />
+                    <InfoTip label="Family Appeal" text={statHelp["Family Appeal"]} />
                   </dt>
                   <dd>{ride.familyAppeal} / 5</dd>
                 </div>
                 <div>
                   <dt>
-                    <HelpLabel label="Thrill Appeal" />
+                    <InfoTip label="Thrill Appeal" text={statHelp["Thrill Appeal"]} />
                   </dt>
                   <dd>{ride.thrillAppeal} / 5</dd>
                 </div>
                 <div>
                   <dt>
-                    <HelpLabel label="Tourist Appeal" />
+                    <InfoTip label="Tourist Appeal" text={statHelp["Tourist Appeal"]} />
                   </dt>
                   <dd>{ride.touristAppeal} / 5</dd>
                 </div>
               </dl>
+              {queuedCount > 0 ? <p className="ride-queued-note">Queued for next month: {queuedCount}</p> : null}
               <button
                 className="button button--secondary"
                 disabled={insufficientCash || insufficientArea}
                 onClick={() => onBuild(ride.id)}
               >
-                {insufficientCash ? "Need more cash" : insufficientArea ? "Need more area" : "Plan Build"}
+                {insufficientCash
+                  ? "Need more cash"
+                  : insufficientArea
+                    ? "Need more area"
+                    : queuedCount > 0
+                      ? "Queue Another"
+                      : "Plan Build"}
               </button>
             </article>
           );

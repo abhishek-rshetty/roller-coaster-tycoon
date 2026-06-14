@@ -35,6 +35,10 @@ export function Dashboard({
   const latestReport = gameState.latestReport;
   const availableCash = gameState.cash - gameState.reservedCash;
   const availableArea = gameState.areaCapacity - gameState.areaUsed - gameState.reservedArea;
+  const plannedRideCounts = gameState.plannedRides.reduce<Record<string, number>>((counts, ride) => {
+    counts[ride.id] = (counts[ride.id] ?? 0) + 1;
+    return counts;
+  }, {});
   const stats = buildStatBarData({
     month: gameState.month,
     cash: formatMoney(gameState.cash),
@@ -74,7 +78,12 @@ export function Dashboard({
       {error ? <div className="alert">{error}</div> : null}
 
       <div className="dashboard-grid">
-        <RideCatalog availableCash={availableCash} availableArea={availableArea} onBuild={onBuildRide} />
+        <RideCatalog
+          availableCash={availableCash}
+          availableArea={availableArea}
+          plannedRideCounts={plannedRideCounts}
+          onBuild={onBuildRide}
+        />
         <PlannedBuilds plannedRides={gameState.plannedRides} onCancel={onCancelPlannedRide} />
         <BuiltRides rides={gameState.activeRides} />
         <PricingPanel ticketPrice={gameState.ticketPrice} onSetTicketPrice={onSetTicketPrice} />

@@ -43,6 +43,29 @@ function App() {
     }
   }
 
+  function applyActionAndScrollToReport(transform: (currentState: GameState) => GameState) {
+    if (!gameState) {
+      return;
+    }
+
+    try {
+      const nextState = transform(gameState);
+      setGameState(nextState);
+      saveGame(nextState);
+      setHasResume(true);
+      setError(null);
+
+      requestAnimationFrame(() => {
+        document.getElementById("monthly-report")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
+      });
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Something went wrong.");
+    }
+  }
+
   function handleResume() {
     const savedGame = loadGame();
 
@@ -104,7 +127,7 @@ function App() {
       onSetTicketPrice={(price) => applyAction((currentState) => setTicketPrice(currentState, price))}
       onBorrow={() => applyAction((currentState) => takeLoan(currentState, 50000))}
       onRepay={() => applyAction((currentState) => repayLoan(currentState, 50000))}
-      onRunMonth={() => applyAction((currentState) => simulateNextMonth(currentState))}
+      onRunMonth={() => applyActionAndScrollToReport((currentState) => simulateNextMonth(currentState))}
     />
   );
 }

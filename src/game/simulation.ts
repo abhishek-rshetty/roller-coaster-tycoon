@@ -98,9 +98,17 @@ export function getCompetitionModifier(state: GameState): number {
   return 1 - state.selectedLocation.competitionStrength;
 }
 
+function getSoftOpeningVisitors(state: GameState, rawMarketDemand: number): number {
+  const curiosityMultiplier = state.plannedRides.length > 0 ? 0.1 : 0.05;
+
+  return Math.floor(
+    rawMarketDemand * curiosityMultiplier * getCompetitionModifier(state) * getPriceModifier(state.ticketPrice)
+  );
+}
+
 function getVisitors(state: GameState, rawMarketDemand: number, totalAttraction: number): number {
   if (state.activeRides.length === 0) {
-    return 0;
+    return getSoftOpeningVisitors(state, rawMarketDemand);
   }
 
   const attractionModifier = Math.min(1.5, totalAttraction / 100);
@@ -162,10 +170,10 @@ function buildRidePerformanceReport(state: GameState, visitors: number): RidePer
       comment = "This ride is close to capacity and may benefit from support expansion.";
     } else if (marketFitScore >= 0.75 && utilizationRate >= 0.6) {
       comment = "Strong fit for this market and performing well.";
-    } else if (insight.ride.monthlyMaintenance / Math.max(estimatedVisitors, 1) > 2) {
-      comment = "Expensive to maintain for its current demand.";
     } else if (marketFitScore <= 0.45) {
       comment = "This ride is not a strong match for your current market.";
+    } else if (insight.ride.monthlyMaintenance >= 15000 && utilizationRate < 0.25) {
+      comment = "Expensive to maintain for its current demand.";
     }
 
     return {
@@ -174,7 +182,7 @@ function buildRidePerformanceReport(state: GameState, visitors: number): RidePer
       category: insight.ride.category,
       estimatedVisitors,
       utilizationRate,
-      attractionContribution: insight.adjustedAttraction,
+      attractionContribution: attractionShare,
       marketFitScore,
       maintenanceCost: insight.ride.monthlyMaintenance,
       comment
@@ -190,6 +198,10 @@ function buildMessages(
 
   if (previousState.activeRides.length === 0 && snapshot.visitors === 0) {
     messages.push("You have no active rides yet, so the park could not attract any visitors this month.");
+  }
+
+  if (previousState.activeRides.length === 0 && snapshot.visitors > 0) {
+    messages.push("Soft-opening curiosity still brought in some visitors even before rides were operating.");
   }
 
   if (snapshot.visitors === snapshot.totalRideCapacity && snapshot.totalRideCapacity > 0) {
